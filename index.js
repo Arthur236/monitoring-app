@@ -78,7 +78,7 @@ let unifiedServer = function(req, res) {
       'method': method,
       'headers': headers,
       'payload': helpers.parseJsonToObject(buffer)
-    }
+    };
 
     // Route the request to the handler specified in the router
     chosenHandler(data, function(statusCode, payload) {
@@ -108,11 +108,12 @@ let unifiedServer = function(req, res) {
 
     // console.log('\nRequest received with this payload: ', buffer);
   });
-}
+};
 
 // Define a request router
 const router = {
   'ping': handlers.ping,
   'users': handlers.users,
-  'tokens': handlers.tokens
+  'tokens': handlers.tokens,
+  'checks': handlers.checks
 };
