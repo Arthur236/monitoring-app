@@ -97,7 +97,10 @@ app.bindLogoutButton = function() {
 };
 
 // Log the user out then redirect them
-app.logUserOut = function() {
+app.logUserOut = function(redirectUser) {
+  // Set redirectUser to default to true
+  redirectUser = typeof(redirectUser) === 'boolean' ? redirectUser : true;
+
   // Get the current token id
   const tokenId = typeof(app.config.sessionToken.id) === 'string' ? app.config.sessionToken.id : false;
 
@@ -110,7 +113,9 @@ app.logUserOut = function() {
     app.setSessionToken(false);
 
     // Send the user to the logged out page
-    window.location = '/session/deleted';
+    if(redirectUser) {
+      window.location = '/session/deleted';
+    }
 
   });
 };
@@ -144,7 +149,7 @@ app.bindForms = function() {
         for(let i = 0; i < elements.length; i++) {
           if(elements[i].type !== 'submit') {
             const valueOfElement = elements[i].type === 'checkbox' ? elements[i].checked : elements[i].value;
-            if(elements[i].name == '_method') {
+            if(elements[i].name === '_method') {
               method = valueOfElement;
             } else {
               payload[elements[i].name] = valueOfElement;
@@ -153,8 +158,11 @@ app.bindForms = function() {
           }
         }
 
+        // If the method is DELETE, the payload should be a queryStringObject instead
+        const queryStringObject = method == 'DELETE' ? payload : {};
+
         // Call the API
-        app.client.request(undefined, path, method, undefined, payload, function(statusCode, responsePayload) {
+        app.client.request(undefined, path, method, queryStringObject, payload, function(statusCode, responsePayload) {
           // Display an error on the form if needed
           if(statusCode !== 200) {
 
@@ -224,6 +232,12 @@ app.formResponseProcessor = function(formId, requestPayload, responsePayload) {
     document.querySelector('#' + formId + ' .formSuccess').style.display = 'block';
   }
 
+  // If the user just deleted their account, redirect them to the account-delete page
+  if(formId === 'accountEdit3') {
+    app.logUserOut(false);
+    window.location = '/account/deleted';
+  }
+
 };
 
 // Get the session token from localstorage and set it in the app.config object
@@ -249,7 +263,6 @@ app.getSessionToken = function() {
 // Set (or remove) the loggedIn class from the body
 app.setLoggedInClass = function(add) {
   const target = document.querySelector('body');
-
   if(add) {
     target.classList.add('loggedIn');
   } else {
